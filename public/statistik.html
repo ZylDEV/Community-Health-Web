@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Admin Management</title>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f3f8;
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+    }
+    .sidebar h2 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      user-select: none;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #3f556e;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s;
+    }
+    .sidebar ul li:hover {
+      background-color: #34495e;
+    }
+
+    /* Main content */
+    .main {
+      flex-grow: 1;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    /* Card style */
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      transition: transform 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Card content */
+    .card .icon {
+      font-size: 3rem;
+      opacity: 0.2;
+      user-select: none;
+    }
+    .card .info {
+      flex-grow: 1;
+      margin-left: 20px;
+    }
+    .card .info h3 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: #333;
+    }
+    .card .info p {
+      margin: 5px 0 0 0;
+      color: #777;
+      font-size: 0.95rem;
+    }
+
+    .stats-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+
+  max-width: 1200px;        /* samakan max-width dengan list-container */
+  margin-left: auto;
+  margin-right: auto;       /* biar center */
+  padding: 20px;            /* samakan padding */
+  border-radius: 12px;      /* samakan border-radius */
+  background-color: #f9fafb; /* samakan background */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* samakan box-shadow */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Kalau chart-container sebagai child/box di dalam stats-container */
+/* Bisa dipertahankan styling chart-container dengan sedikit penyesuaian */
+
+.chart-container {
+  max-width: 700px;
+  background-color: #fff;   /* biarkan putih agar beda dengan container induk */
+  border-radius: 12px;      /* samakan border-radius */
+  padding: 20px;            /* samakan padding dengan list-container */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* samakan box-shadow */
+  user-select: none;
+}
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+      user-select: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main {
+        padding: 15px;
+      }
+      .stats-container {
+        flex-direction: column;
+      }
+      .card {
+        justify-content: flex-start;
+      }
+      .chart-container {
+        max-width: 100%;
+      }
+    }
+  </style>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Icon library for cards (FontAwesome CDN) -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Firebase SDK + JS -->
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBAYrLjPDZDH1YrbRPV2_-cAIPXKuwFFM",
+    authDomain: "posyanduapp-61635.firebaseapp.com",
+    databaseURL: "https://posyanduapp-61635-default-rtdb.firebaseio.com",
+    projectId: "posyanduapp-61635",
+    storageBucket: "posyanduapp-61635.appspot.com",
+    messagingSenderId: "665390164212",
+    appId: "1:665390164212:web:8c75ce018b1128b356d6a1",
+    measurementId: "G-8LJRMFNG0Z"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Sidebar navigation
+  document.querySelectorAll('.sidebar ul li').forEach(item => {
+    item.addEventListener('click', () => {
+      const targetPage = item.getAttribute('data-target');
+      window.location.href = targetPage;
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  // Fungsi untuk hitung jumlah child
+  function getCount(refPath) {
+    return new Promise((resolve) => {
+      const dataRef = ref(db, refPath);
+      onValue(dataRef, (snapshot) => {
+        resolve(snapshot.exists() ? snapshot.size : 0);
+      }, { onlyOnce: true });
+    });
+  }
+
+  // Fungsi hitung jumlah pengguna berdasarkan jenis kelamin
+  function getUsersGenderCount() {
+    return new Promise((resolve) => {
+      const usersRef = ref(db, "users");
+      onValue(usersRef, (snapshot) => {
+        let laki = 0, perempuan = 0;
+        snapshot.forEach(child => {
+          const user = child.val();
+          if (user.jk === "L") laki++;
+          else if (user.jk === "P") perempuan++;
+        });
+        resolve({ laki, perempuan, total: snapshot.size });
+      }, { onlyOnce: true });
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", async () => {
+    const [adminsCount, jadwalCount, rekamMedisCount, genderData] = await Promise.all([
+      getCount("admins"),
+      getCount("jadwal"),
+      getCount("rekamMedis"),
+      getUsersGenderCount()
+    ]);
+
+    const usersCount = genderData.total;
+    const lakiCount = genderData.laki;
+    const perempuanCount = genderData.perempuan;
+    const totalCount = adminsCount + usersCount + jadwalCount + rekamMedisCount;
+
+    // Tampilkan ke UI
+    document.getElementById("adminsCount").textContent = adminsCount;
+    document.getElementById("usersCount").textContent = usersCount;
+    document.getElementById("lakiCount").textContent = lakiCount;
+    document.getElementById("perempuanCount").textContent = perempuanCount;
+    document.getElementById("jadwalCount").textContent = jadwalCount;
+    document.getElementById("rekamMedisCount").textContent = rekamMedisCount;
+    document.getElementById("totalCount").textContent = totalCount;
+
+    // Grafik batang
+    const ctxBar = document.getElementById('dataChart').getContext('2d');
+    new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: ['Admins', 'Users', 'Laki-laki', 'Perempuan', 'Jadwal', 'Rekam Medis'],
+        datasets: [{
+          label: 'Jumlah Data',
+          data: [adminsCount, usersCount, lakiCount, perempuanCount, jadwalCount, rekamMedisCount],
+          backgroundColor: ['#3498db', '#27ae60', '#2980b9', '#e91e63', '#f39c12', '#8e44ad'],
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+    // Grafik donat
+    const ctxDoughnut = document.getElementById('dataPercentChart').getContext('2d');
+    new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: ['Admins', 'Users', 'Jadwal', 'Rekam Medis'],
+        datasets: [{
+          label: 'Persentase Data',
+          data: [adminsCount, usersCount, jadwalCount, rekamMedisCount],
+          backgroundColor: ['#3498db', '#27ae60', '#f39c12', '#8e44ad'],
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 15,
+              padding: 15,
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const value = context.parsed;
+                const percent = total ? (value / total * 100).toFixed(1) : 0;
+                return `${context.label}: ${value} (${percent}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+</head>
+<body>
+  <!-- Tambahkan di dalam <body> -->
+<div class="sidebar">
+  <h2>Dashboard</h2>
+  <ul>
+    <li data-target="users.html">Input Users</li>
+    <li data-target="admin.html">Input Admin</li>
+    <li data-target="rekammedis.html">Rekam Medis</li>
+    <li data-target="jadwal.html">Input Jadwal</li>
+    <li data-target="statistik.html">Statistik</li>
+    <li id="logoutBtn" style="cursor:pointer; color:#e74c3c; margin-top: 20px;">Logout</li>
+  </ul>
+</div>
+
+<div class="main">
+  <h2>Statistik Utama</h2>
+  <div class="stats-container">
+    <div class="card">
+      <i class="fa-solid fa-user-shield icon" style="color:#3498db;"></i>
+      <div class="info">
+        <h3 id="adminsCount">-</h3>
+        <p>Admins Terdaftar</p>
+      </div>
+    </div>
+    <div class="card">
+      <i class="fa-solid fa-users icon" style="color:#27ae60;"></i>
+      <div class="info">
+        <h3 id="usersCount">-</h3>
+        <p>Users Terdaftar</p>
+      </div>
+    </div>
+    <div class="card">
+      <i class="fa-solid fa-mars icon" style="color:#2980b9;"></i>
+      <div class="info">
+        <h3 id="lakiCount">-</h3>
+        <p>Laki-laki</p>
+      </div>
+    </div>
+    <div class="card">
+      <i class="fa-solid fa-venus icon" style="color:#e91e63;"></i>
+      <div class="info">
+        <h3 id="perempuanCount">-</h3>
+        <p>Perempuan</p>
+      </div>
+    </div>
+    <div class="card">
+      <i class="fa-solid fa-calendar-days icon" style="color:#f39c12;"></i>
+      <div class="info">
+        <h3 id="jadwalCount">-</h3>
+        <p>Jadwal Tersimpan</p>
+      </div>
+    </div>
+    <div class="card">
+      <i class="fa-solid fa-file-medical icon" style="color:#8e44ad;"></i>
+      <div class="info">
+        <h3 id="rekamMedisCount">-</h3>
+        <p>Rekam Medis</p>
+      </div>
+    </div>
+    <div class="card" style="flex-basis: 100%; justify-content: center; font-weight: 700; font-size: 1.5rem; color: #555;">
+      Total Data: <span id="totalCount">-</span>
+    </div>
+  </div>
+
+  <h2>Grafik Data</h2>
+  <div class="chart-container" style="margin-bottom: 40px;">
+    <canvas id="dataChart" aria-label="Grafik jumlah data" role="img"></canvas>
+  </div>
+
+  <h2>Persentase Data</h2>
+  <div class="chart-container" style="max-width: 400px; margin: 0 auto 40px;">
+    <canvas id="dataPercentChart" aria-label="Grafik persentase data" role="img"></canvas>
+  </div>
+</div>
+
+</body>
+</html>

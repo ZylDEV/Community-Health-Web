@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login Keren dengan Particle.js & Glassmorphism Halus</title>
+  <style>
+    /* Reset dan dasar */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #182733, #203a43);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Container partikel fullscreen */
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      top: 0;
+      left: 0;
+    }
+
+    /* Container login */
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 360px;
+      max-width: 90vw;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 40px 30px;
+      color: white;
+    }
+
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 600;
+      font-size: 28px;
+      letter-spacing: 1.2px;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    /* Floating label form */
+    .form-group {
+      position: relative;
+      margin-bottom: 30px;
+    }
+    input {
+      width: 100%;
+      padding: 14px 40px 14px 12px; /* ruang kanan buat icon */
+      font-size: 16px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid rgba(255,255,255,0.5);
+      color: #fff;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    input::placeholder {
+      color: transparent;
+    }
+    label {
+      position: absolute;
+      top: 14px;
+      left: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 16px;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    input:focus {
+      border-bottom-color: #00d8ff;
+    }
+    input:focus + label,
+    input:not(:placeholder-shown) + label {
+      top: -8px;
+      left: 8px;
+      font-size: 12px;
+      color: #00d8ff;
+      background: rgba(15, 32, 39, 0.7);
+      padding: 0 6px;
+      border-radius: 4px;
+    }
+
+    /* Tombol intip password */
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: rgba(255,255,255,0.7);
+      font-size: 18px;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
+    .toggle-password:hover {
+      color: #00d8ff;
+    }
+
+    /* Button */
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #00d8ff, #0050ff);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 8px 15px rgba(0, 216, 255, 0.3);
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+      user-select: none;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #0050ff, #00d8ff);
+      box-shadow: 0 12px 20px rgba(0, 216, 255, 0.6);
+    }
+    button:active {
+      transform: translateY(2px);
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .login-container {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Particle Background -->
+  <div id="particles-js"></div>
+
+  <!-- Login Form Container -->
+  <div class="login-container" role="main" aria-label="Form login pengguna">
+    <h2>POSYANDU</h2>
+    <form id="loginForm" autocomplete="off" novalidate>
+      <div class="form-group">
+        <input type="email" id="email" name="email" required placeholder=" " autocomplete="username" />
+        <label for="email">Email</label>
+      </div>
+      <div class="form-group" style="position: relative;">
+        <input type="password" id="password" name="password" required placeholder=" " autocomplete="current-password" />
+        <label for="password">Password</label>
+        <span class="toggle-password" id="togglePassword" title="Tampilkan / sembunyikan password">&#128065;</span>
+      </div>
+      <button type="submit">Masuk</button>
+    </form>
+  </div>
+
+  <!-- Particle.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+  <!-- Firebase SDKs (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    // Particle.js config
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 30, density: { enable: true, value_area: 800 } },
+        color: { value: "#00d8ff" },
+        shape: { type: "circle" },
+        opacity: { value: 0.2, random: true },
+        size: { value: 3, random: true },
+        move: { enable: true, speed: 2, direction: "none", out_mode: "out" },
+        line_linked: {
+          enable: true,
+          distance: 150,
+          color: "#00d8ff",
+          opacity: 0.15,
+          width: 1
+        }
+      },
+      interactivity: {
+        detect_on: "canvas",
+        events: {
+          onhover: { enable: true, mode: "grab" },
+          onclick: { enable: true, mode: "push" }
+        },
+        modes: {
+          grab: { distance: 140, line_linked: { opacity: 0.5 } },
+          push: { particles_nb: 4 }
+        }
+      },
+      retina_detect: true
+    });
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBBAYrLjPDZDH1YrbRPV2_-cAIPXKuwFFM",
+      authDomain: "posyanduapp-61635.firebaseapp.com",
+      databaseURL: "https://posyanduapp-61635-default-rtdb.firebaseio.com",
+      projectId: "posyanduapp-61635",
+      storageBucket: "posyanduapp-61635.appspot.com",
+      messagingSenderId: "665390164212",
+      appId: "1:665390164212:web:8c75ce018b1128b356d6a1",
+      measurementId: "G-8LJRMFNG0Z"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // Toggle show/hide password
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      togglePassword.style.color = type === 'password' ? 'rgba(255,255,255,0.7)' : '#00d8ff';
+    });
+
+    // Login function cek data di Firebase Realtime Database
+    async function login(email, password) {
+      try {
+        const snapshot = await database.ref('admins').once('value');
+        if (!snapshot.exists()) {
+          alert("Data admin tidak ditemukan!");
+          return false;
+        }
+        const admins = snapshot.val();
+
+        // Cari admin berdasarkan email
+        const adminEntry = Object.values(admins).find(admin => admin.email === email);
+
+        if (!adminEntry) {
+          alert("Email tidak terdaftar!");
+          return false;
+        }
+
+        if (adminEntry.password === password) {
+          alert("Login berhasil!");
+          return true;
+        } else {
+          alert("Password salah!");
+          return false;
+        }
+      } catch (error) {
+        console.error("Error saat login:", error);
+        alert("Terjadi kesalahan saat login.");
+        return false;
+      }
+    }
+
+    // Handle form submit
+    const loginForm = document.getElementById('loginForm');
+    loginForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const email = loginForm.email.value.trim();
+      const password = loginForm.password.value.trim();
+
+      if (!email || !password) {
+        alert('Mohon isi semua bidang.');
+        return;
+      }
+
+      const success = await login(email, password);
+      if(success) {
+        // Redirect ke halaman dashboard setelah login sukses
+        window.location.href = "users.html";
+      }
+      // jika gagal, jangan reset form agar user bisa coba ulang
+    });
+  </script>
+</body>
+</html>

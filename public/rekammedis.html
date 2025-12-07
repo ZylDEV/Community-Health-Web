@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Rekam Medis</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f3f8;
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden; /* halaman utama tidak scroll */
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+    }
+    .sidebar h2 {
+        color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      user-select: none;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #3f556e;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sidebar ul li:hover {
+      background-color: #34495e;
+    }
+
+    /* Main content */
+    .main {
+      padding: 30px;
+      display: block;          /* block supaya normal */
+      height: 100vh;           /* supaya tinggi penuh viewport */
+      overflow-y: auto;        /* scroll vertical jika konten overflow */
+      flex-grow: unset;
+    }
+/* Modal background */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: rgba(200, 220, 230, 0.4); /* soft biru muda transparan */
+  backdrop-filter: blur(5px);
+}
+
+/* Modal box */
+.modal-content {
+  background: #f9faff; /* putih kebiruan sangat soft */
+  margin: 7% auto;
+  padding: 25px 30px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 6px 20px rgba(100, 120, 140, 0.15);
+  color: #3b4a6b; /* abu biru tua kalem */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border: 1.5px solid #aac9e5; /* border soft blue */
+  position: relative;
+}
+
+/* Close button */
+.close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #7a8ba6; /* abu kebiruan kalem */
+  transition: color 0.3s ease, transform 0.3s ease;
+  user-select: none;
+}
+
+.close:hover {
+  color: #4a5d7b; /* sedikit lebih gelap */
+  transform: scale(1.15);
+}
+
+
+
+select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background-color: white;
+      font-size: 14px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 20px;
+      padding-right: 35px;
+    }
+    select:focus {
+      border-color: #007BFF;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+
+    /* Card style */
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      /* remove max-width for form so it can stretch */
+    }
+
+    /* Headings */
+    h2 {
+      margin-top: 0;
+      color: #333;
+      user-select: none;
+    }
+
+    /* Form */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    input {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 100%;
+    }
+    button {
+      padding: 12px;
+      font-size: 16px;
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button:hover {
+      background-color: #2471a3;
+    }
+
+    /* Daftar akun container */
+    .list-container {
+  background-color: #f9fafb;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  max-width: 1200px;
+  margin: 20px auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+
+.list-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list-container::-webkit-scrollbar-thumb {
+  background-color: #a0aec0;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  user-select: none;
+}
+
+.header-flex h2 {
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2vw, 1.9rem);  /* font-size responsif */
+  color: #2c3e50;
+  margin: 0;
+  flex-grow: 1;
+  min-width: 200px;            /* beri ruang minimum lebih besar */
+  user-select: none;
+  line-height: 1.2;
+}
+
+    #searchInput {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      max-width: 300px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Table */
+    /* Tabel styling */
+    .table-wrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+
+thead th {
+  background-color: #f0f0f0;
+  padding: 12px;
+  border: 1px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+  text-align: center;
+  user-select: none;
+}
+
+tbody td {
+  border: 1px solid #ddd;
+  padding: 12px 10px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+tbody td:last-child {
+  border-right: none;
+}
+
+tbody tr:hover {
+  background-color: #f5f8ff;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+tbody td:nth-child(2),
+tbody td:nth-child(12) {
+  text-align: left;
+  padding-left: 16px;
+  white-space: normal;
+}
+    /* Set width kolom */
+th:nth-child(1), td:nth-child(1)   { width: 4%;  }
+th:nth-child(2), td:nth-child(2)   { width: 9%; text-align: left; padding-left: 12px; }
+th:nth-child(3), td:nth-child(3)   { width: 8%;  text-align: center; }
+th:nth-child(4), td:nth-child(4)   { width: 10%; text-align: left; padding-left: 12px; }
+th:nth-child(5), td:nth-child(5)   { width: 10%;  text-align: center; }
+th:nth-child(6), td:nth-child(6)   { width: 10%; text-align: center; }
+th:nth-child(7), td:nth-child(7)   { width: 5%;  text-align: center; }
+th:nth-child(8), td:nth-child(8)   { width: 10%; text-align: center; }
+th:nth-child(9), td:nth-child(9)   { width: 10%; text-align: center; }
+th:nth-child(10), td:nth-child(10) { width: 10%; text-align: center; }
+th:nth-child(11), td:nth-child(11) { width: 7%;  text-align: center; }
+th:nth-child(12), td:nth-child(12) { width: 10%; text-align: left; padding-left: 12px; }
+th:nth-child(13), td:nth-child(13) { width: 15%;  text-align: center; }
+
+
+
+    /* Tombol aksi */
+    button.editBtn,
+    button.deleteBtn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.25s ease;
+      margin: 0 4px;
+      color: white;
+      user-select: none;
+    }
+    button.editBtn {
+      background-color: #3498db;
+    }
+    button.editBtn:hover {
+      background-color: #2980b9;
+    }
+    button.deleteBtn {
+      background-color: #e74c3c;
+    }
+    button.deleteBtn:hover {
+      background-color: #c0392b;
+    }
+
+    /* Hover baris */
+    tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    /* Responsif */
+    @media (max-width: 768px) {
+      .list-container {
+        max-height: 280px;
+      }
+      .header-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      #searchInput {
+        max-width: 100%;
+      }
+      /* Ubah tabel jadi block untuk mobile */
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        display: none; /* sembunyikan header */
+      }
+      tbody tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      tbody td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        white-space: normal;
+        overflow: visible;
+      }
+      tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 12px;
+        width: 45%;
+        padding-left: 12px;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+      }
+    }
+  </style>
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    onValue,
+    remove,
+    update
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBAYrLjPDZDH1YrbRPV2_-cAIPXKuwFFM",
+    authDomain: "posyanduapp-61635.firebaseapp.com",
+    databaseURL: "https://posyanduapp-61635-default-rtdb.firebaseio.com",
+    projectId: "posyanduapp-61635",
+    storageBucket: "posyanduapp-61635.appspot.com",
+    messagingSenderId: "665390164212",
+    appId: "1:665390164212:web:8c75ce018b1128b356d6a1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  let users = {};
+
+  window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.sidebar ul li').forEach(item => {
+      item.addEventListener('click', () => {
+        const targetPage = item.getAttribute('data-target');
+        window.location.href = targetPage;
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    const form = document.getElementById("rekamForm");
+    const tableBody = document.querySelector("#rekamTable tbody");
+    const searchInput = document.getElementById("searchInput");
+    const filterBulan = document.getElementById("filterBulan");
+
+    const userSelect = document.getElementById("userSelect");
+    const namaInput = document.getElementById("nama");
+    const nikInput = document.getElementById("nik");
+    const tanggalInput = document.getElementById("tanggal");
+    const waktuInput = document.getElementById("waktu");
+    const keluhanInput = document.getElementById("keluhan");
+    const bbInput = document.getElementById("bb");
+    const gulaInput = document.getElementById("gulaDarah");
+    const uratInput = document.getElementById("asamUrat");
+    const kolesterolInput = document.getElementById("kolesterol");
+    const tensiInput = document.getElementById("tensi");
+    const resepInput = document.getElementById("resep");
+
+    let editingKey = null;
+    const rekamRef = ref(db, "rekamMedis");
+    const usersRef = ref(db, "users");
+    let allData = [];
+
+    // Ambil data user untuk dropdown
+    onValue(usersRef, (snapshot) => {
+      users = snapshot.val() || {};
+      userSelect.innerHTML = `<option value="">-- Pilih User --</option>`;
+      for (const key in users) {
+        const user = users[key];
+        if (user.nama && user.nik) {
+          userSelect.innerHTML += `<option value="${key}">${user.nama}</option>`;
+        }
+      }
+    });
+
+    userSelect.addEventListener("change", () => {
+      const userId = userSelect.value;
+      if (!userId) {
+        namaInput.value = "";
+        nikInput.value = "";
+        return;
+      }
+
+      const selectedUserRef = ref(db, `users/${userId}`);
+      onValue(selectedUserRef, (snapshot) => {
+        const user = snapshot.val();
+        if (user) {
+          namaInput.value = user.nama || "";
+          nikInput.value = user.nik || "";
+        }
+      }, { onlyOnce: true });
+    });
+
+    function renderTable(filteredData) {
+      tableBody.innerHTML = "";
+      let count = 1;
+      filteredData.forEach((data) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${count++}</td>
+          <td>${data.nama}</td>
+          <td>${data.nik}</td>
+          <td>${data.tanggal}</td>
+          <td>${data.waktu}</td>
+          <td>${data.keluhan}</td>
+          <td>${data.bb}</td>
+          <td>${data.gulaDarah}</td>
+          <td>${data.asamUrat}</td>
+          <td>${data.kolesterol}</td>
+          <td>${data.tensi}</td>
+          <td>${data.resep}</td>
+          <td>
+            <button class="editBtn" data-id="${data.key}">Edit</button>
+            <button class="deleteBtn" data-id="${data.key}">Hapus</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      tableBody.querySelectorAll(".deleteBtn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const key = e.target.dataset.id;
+          if (confirm("Yakin ingin menghapus data ini?")) {
+            remove(ref(db, `rekamMedis/${key}`));
+            if (editingKey === key) {
+              editingKey = null;
+              form.reset();
+              userSelect.value = "";
+            }
+          }
+        });
+      });
+
+      tableBody.querySelectorAll(".editBtn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const key = e.target.dataset.id;
+          const data = allData.find((item) => item.key === key);
+          if (data) {
+            editingKey = key;
+            namaInput.value = data.nama;
+            nikInput.value = data.nik;
+            tanggalInput.value = data.tanggal;
+            waktuInput.value = data.waktu;
+            keluhanInput.value = data.keluhan;
+            bbInput.value = data.bb;
+            gulaInput.value = data.gulaDarah;
+            uratInput.value = data.asamUrat;
+            kolesterolInput.value = data.kolesterol;
+            tensiInput.value = data.tensi;
+            resepInput.value = data.resep;
+
+            // Otomatis pilih user di dropdown
+            const userId = Object.keys(users).find(id => users[id].nama === data.nama);
+            if (userId) userSelect.value = userId;
+
+            modal.style.display = "block";
+          }
+        });
+      });
+    }
+
+    onValue(rekamRef, (snapshot) => {
+      const data = snapshot.val();
+      allData = [];
+      if (data) {
+        for (const key in data) {
+          allData.push({ key, ...data[key] });
+        }
+        allData.reverse(); // terbaru di atas
+      }
+      filterDataByMonth();
+    });
+
+    // Fungsi filter data berdasarkan bulan dan search sekaligus
+    function filterDataByMonth() {
+      const bulanTerpilih = filterBulan.value; // "01"-"12" atau "" semua
+      let filtered = allData;
+
+      if (bulanTerpilih) {
+        filtered = filtered.filter(item => {
+          if (!item.tanggal) return false;
+          const bulanData = item.tanggal.substring(5,7);
+          return bulanData === bulanTerpilih;
+        });
+      }
+
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      if (searchTerm) {
+        filtered = filtered.filter(item => item.nama.toLowerCase().includes(searchTerm));
+      }
+
+      renderTable(filtered);
+    }
+
+    filterBulan.addEventListener("change", filterDataByMonth);
+    searchInput.addEventListener("input", filterDataByMonth);
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const nama = namaInput.value.trim();
+      const nik = nikInput.value.trim();
+      const tanggal = tanggalInput.value.trim();
+      const waktu = waktuInput.value.trim();
+      const keluhan = keluhanInput.value.trim();
+      const bb = parseFloat(bbInput.value);
+      const gulaDarah = parseFloat(gulaInput.value);
+      const asamUrat = parseFloat(uratInput.value);
+      const kolesterol = parseFloat(kolesterolInput.value);
+      const tensi = tensiInput.value.trim();
+      const resep = resepInput.value.trim();
+
+      if (!nama || !nik || !keluhan || isNaN(bb) || isNaN(gulaDarah) || isNaN(asamUrat) || isNaN(kolesterol) || !tensi || !resep) {
+        alert("Semua field wajib diisi dengan benar!");
+        return;
+      }
+
+      const data = { nama, nik, tanggal, waktu, keluhan, bb, gulaDarah, asamUrat, kolesterol, tensi, resep };
+
+      if (editingKey) {
+        update(ref(db, `rekamMedis/${editingKey}`), data).then(() => {
+          editingKey = null;
+          form.reset();
+          userSelect.value = "";
+        });
+      } else {
+        const newRef = push(rekamRef);
+        set(newRef, data).then(() => {
+          form.reset();
+          userSelect.value = "";
+        });
+      }
+    });
+
+    // Modal handler
+    const modal = document.getElementById("rekamModal");
+    const openModalBtn = document.getElementById("openModalBtn");
+    const closeModalBtn = document.querySelector(".modal .close");
+
+    openModalBtn.addEventListener("click", () => {
+      modal.style.display = "block";
+    });
+
+    closeModalBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+      form.reset();
+      editingKey = null;
+      userSelect.value = "";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+        form.reset();
+        editingKey = null;
+        userSelect.value = "";
+      }
+    });
+
+    // Download PDF
+     document.getElementById("downloadBtn").addEventListener("click", () => {
+  const table = document.getElementById("rekamTable").cloneNode(true);
+
+  // Cari index kolom Password, Aksi, dan JK
+  const headers = Array.from(table.rows[0].cells).map(th => th.innerText.toLowerCase().trim());
+  const indexPassword = headers.findIndex(h => h === "password");
+  const indexAksi = headers.findIndex(h => h === "aksi");
+  const indexJK = headers.findIndex(h => h === "jk");
+
+  // Hapus kolom Password dan Aksi dari kanan ke kiri agar indeks tidak bergeser
+  const indicesToDelete = [indexPassword, indexAksi].filter(i => i !== -1).sort((a, b) => b - a);
+  for (let row of table.rows) {
+    indicesToDelete.forEach(i => {
+      if (row.cells[i]) row.deleteCell(i);
+    });
+  }
+
+  // Tanggal cetak pakai format Indonesia
+  const now = new Date();
+  const tanggalCetak = now.toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+
+  // Sisipkan tfoot ke table
+  // Jika sudah ada tfoot, ganti isinya, kalau belum buat baru
+  let tfoot = table.querySelector('tfoot');
+  if (!tfoot) {
+    tfoot = document.createElement('tfoot');
+    table.appendChild(tfoot);
+  }
+
+  const htmlContent = `
+    <html>
+      <head>
+        <title>Cetak Rekam Medis Posyandu</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 30mm 20mm 25mm 20mm;
+          }
+          body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fb;
+          }
+          .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #1f497d;
+            padding-bottom: 12px;
+          }
+          .title-group {
+            flex-grow: 1;
+          }
+          .title-group h1 {
+            font-size: 26px;
+            margin: 0;
+            font-weight: 700;
+            color: #1f497d;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+          }
+          .title-group p {
+            margin: 6px 0 0 0;
+            font-size: 15px;
+            color: #3a5f9e;
+            font-style: italic;
+          }
+          .tanggal-cetak {
+            text-align: right;
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #5a739c;
+            font-weight: 600;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          }
+          table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+            margin-bottom: 50px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(31, 73, 125, 0.15);
+            overflow: hidden;
+          }
+          th, td {
+            padding: 14px 18px;
+            text-align: left;
+            vertical-align: middle;
+            color: #2c3e50;
+            border-bottom: 1px solid #d9e3f0;
+          }
+          th {
+            background: linear-gradient(90deg, #3a65a9, #1f497d);
+            color: #fff;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            user-select: none;
+            border-bottom: 3px solid #173c6e;
+          }
+          tbody tr:nth-child(even) {
+            background-color: #f0f4fc;
+            transition: background-color 0.3s ease;
+          }
+          tbody tr:hover {
+            background-color: #d0dff7;
+            cursor: default;
+            transition: background-color 0.3s ease;
+          }
+          .footer-ttd {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 14px;
+            margin-top: 50px;
+            color: #1f497d;
+            font-weight: 700;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .ttd-box {
+            text-align: center;
+            width: 260px;
+            margin-left: 20px;
+          }
+          .ttd-space {
+            height: 90px;
+            border-bottom: 2px solid #a4b3d6;
+            margin-bottom: 15px;
+          }
+          @media print {
+            button#printBtn {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title-group">
+            <h1>Data Rekam Medis Pengguna Aplikasi Posyandu</h1>
+            <p> </p>
+          </div>
+        </div>
+        <div class="tanggal-cetak">Dicetak pada: ${tanggalCetak}</div>
+        ${table.outerHTML}
+        <div class="footer-ttd">
+          <div class="ttd-box">
+            <div>Ketua Posyandu</div>
+            <div class="ttd-space"></div>
+            <div>hasdiara</div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+});
+
+  });
+</script>
+
+
+
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Dashboard</h2>
+    <ul>
+      <li data-target="users.html">Input Users</li>
+      <li data-target="admin.html">Input Admin</li>
+      <li data-target="rekammedis.html">Rekam Medis</li>
+      <li data-target="jadwal.html">Input Jadwal</li>
+      <li data-target="statistik.html">Statistik</li>
+      <li id="logoutBtn" style="cursor:pointer; color:#e74c3c; margin-top: 20px;">Logout</li>
+    </ul>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="rekamModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Form Rekam Medis</h2>
+      <form id="rekamForm">
+        <label for="userSelect">Pilih User</label>
+        <select id="userSelect" required>
+          <option value="">-- Pilih User --</option>
+        </select>
+
+        <label for="nama">Nama</label>
+        <input type="text" id="nama" readonly />
+
+        <label for="nik">NIK</label>
+        <input type="text" id="nik" readonly />
+
+        <label for="tanggal">Tanggal Pemeriksaan</label>
+        <input type="date" id="tanggal" required />
+
+        <label for="waktu">Waktu Pemeriksaan</label>
+        <input type="time" id="waktu" required />
+
+        <label for="keluhan">Keluhan</label>
+        <input type="text" id="keluhan" required />
+
+        <label for="bb">Berat Badan (kg)</label>
+        <input type="number" id="bb" step="0.1" required />
+
+        <label for="gulaDarah">Gula Darah (mg/dL)</label>
+        <input type="number" id="gulaDarah" step="0.1" required />
+
+        <label for="asamUrat">Asam Urat (mg/dL)</label>
+        <input type="number" id="asamUrat" step="0.1" required />
+
+        <label for="kolesterol">Kolesterol (mg/dL)</label>
+        <input type="number" id="kolesterol" step="0.1" required />
+
+        <label for="tensi">Tensi (mmHg)</label>
+        <input type="text" id="tensi" required />
+
+        <label for="resep">Resep Obat</label>
+        <input type="text" id="resep" required />
+
+        <button type="submit">Simpan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content List -->
+  <div class="list-container">
+    <div class="header-flex">
+      <h2>Daftar Rekam Medis</h2>
+
+      <label for="filterBulan" style="margin-left:10px;">Bulan:</label>
+      <select id="filterBulan">
+        <option value="">Semua Bulan</option>
+        <option value="01">Januari</option>
+        <option value="02">Februari</option>
+        <option value="03">Maret</option>
+        <option value="04">April</option>
+        <option value="05">Mei</option>
+        <option value="06">Juni</option>
+        <option value="07">Juli</option>
+        <option value="08">Agustus</option>
+        <option value="09">September</option>
+        <option value="10">Oktober</option>
+        <option value="11">November</option>
+        <option value="12">Desember</option>
+      </select>
+
+      <input type="search" id="searchInput" placeholder="Cari rekam medis..." />
+      <button id="downloadBtn">🖨️ Print</button>
+      <button id="openModalBtn">+</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="rekamTable" aria-label="Daftar Rekam Medis">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>NIK</th>
+            <th>Tanggal</th>
+            <th>Waktu</th>
+            <th>Keluhan</th>
+            <th>BB</th>
+            <th>Gula Darah</th>
+            <th>Asam Urat</th>
+            <th>Kolesterol</th>
+            <th>Tensi</th>
+            <th>Resep</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data akan muncul di sini -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+
+
+</html>

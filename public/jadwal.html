@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Jadwal</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f3f8;
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+    }
+    .sidebar h2 {
+        color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      user-select: none;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #3f556e;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sidebar ul li:hover {
+      background-color: #34495e;
+    }
+    .main {
+      flex-grow: 1;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+      user-select: none;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+    form input, form button {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    form input {
+      flex: 1 1 150px;
+    }
+    form input[type="date"],
+    form input[type="time"] {
+      max-width: 180px;
+    }
+    form button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      cursor: pointer;
+      flex: 0 0 120px;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    form button:hover {
+      background-color: #2471a3;
+    }
+    .list-container {
+  background-color: #f9fafb;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  max-width: 1200px;
+  margin: 20px auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+
+.list-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list-container::-webkit-scrollbar-thumb {
+  background-color: #a0aec0;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+    .header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid #ddd;
+      background-color: #fafafa;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      user-select: none;
+    }
+    .header-flex h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    #searchInput {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      max-width: 300px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      flex-grow: 1;
+    }
+    thead th {
+      background-color: #f0f0f0;
+      padding: 12px;
+      border: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-weight: 600;
+      color: #444;
+      white-space: nowrap;
+      text-align: center;
+      user-select: none;
+    }
+    tbody td {
+      border: 1px solid #ddd;
+      padding: 12px 10px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Set width kolom */
+    th:nth-child(1), td:nth-child(1) { width: 20%; text-align: left; padding-left: 12px; }
+    th:nth-child(2), td:nth-child(2) { width: 20%; }
+    th:nth-child(3), td:nth-child(3) { width: 15%; }
+    th:nth-child(4), td:nth-child(4) { width: 25%; text-align: left; padding-left: 12px; }
+    th:nth-child(5), td:nth-child(5) { width: 20%; }
+    button.editBtn,
+    button.deleteBtn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.25s ease;
+      margin: 0 4px;
+      color: white;
+      user-select: none;
+    }
+    button.editBtn {
+      background-color: #3498db;
+    }
+    button.editBtn:hover {
+      background-color: #2980b9;
+    }
+    button.deleteBtn {
+      background-color: #e74c3c;
+    }
+    button.deleteBtn:hover {
+      background-color: #c0392b;
+    }
+    tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .list-container {
+        max-height: 280px;
+      }
+      .header-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      #searchInput {
+        max-width: 100%;
+      }
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        display: none;
+      }
+      tbody tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      tbody td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        white-space: normal;
+        overflow: visible;
+      }
+      tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 12px;
+        width: 45%;
+        padding-left: 12px;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+      }
+    }
+  </style>
+
+  <!-- Firebase SDK + JS -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      push,
+      set,
+      onValue,
+      remove,
+      update
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBBAYrLjPDZDH1YrbRPV2_-cAIPXKuwFFM",
+      authDomain: "posyanduapp-61635.firebaseapp.com",
+      databaseURL: "https://posyanduapp-61635-default-rtdb.firebaseio.com",
+      projectId: "posyanduapp-61635",
+      storageBucket: "posyanduapp-61635.appspot.com",
+      messagingSenderId: "665390164212",
+      appId: "1:665390164212:web:8c75ce018b1128b356d6a1",
+      measurementId: "G-8LJRMFNG0Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Sidebar navigasi
+    document.querySelectorAll('.sidebar ul li').forEach(item => {
+      item.addEventListener('click', () => {
+        const targetPage = item.getAttribute('data-target');
+        window.location.href = targetPage;
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+    // Contoh logout: redirect ke login.html
+    // Bisa juga tambah logika logout di sini
+    window.location.href = 'index.html';
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("jadwalForm");
+      const tableBody = document.getElementById("jadwalTable").querySelector("tbody");
+      const searchInput = document.getElementById("searchInput");
+
+      const tempatInput = document.getElementById("tempat");
+      const tanggalInput = document.getElementById("tanggal");
+      const waktuInput = document.getElementById("waktu");
+      const kegiatanInput = document.getElementById("kegiatan");
+
+      let editingKey = null;
+      const jadwalRef = ref(db, "jadwal");
+      let allData = [];
+
+      // Render tabel dengan data-label untuk mobile
+      function renderTable(filteredData) {
+        tableBody.innerHTML = "";
+        filteredData.forEach((data, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td data-label="Tempat">${data.tempat}</td>
+            <td data-label="Tanggal">${data.tanggal}</td>
+            <td data-label="Waktu">${data.waktu}</td>
+            <td data-label="Kegiatan">${data.kegiatan}</td>
+            <td data-label="Aksi">
+              <button data-id="${data.key}" class="editBtn">Edit</button>
+              <button data-id="${data.key}" class="deleteBtn">Hapus</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        // Delete button event
+        tableBody.querySelectorAll(".deleteBtn").forEach(btn => {
+          btn.addEventListener("click", e => {
+            const key = e.target.dataset.id;
+            if (confirm("Yakin ingin menghapus jadwal ini?")) {
+              remove(ref(db, `jadwal/${key}`));
+              if (editingKey === key) {
+                editingKey = null;
+                form.reset();
+              }
+            }
+          });
+        });
+
+        // Edit button event
+        tableBody.querySelectorAll(".editBtn").forEach(btn => {
+          btn.addEventListener("click", e => {
+            const key = e.target.dataset.id;
+            const data = allData.find(d => d.key === key);
+            if (!data) return;
+            tempatInput.value = data.tempat;
+            tanggalInput.value = data.tanggal;
+            waktuInput.value = data.waktu;
+            kegiatanInput.value = data.kegiatan;
+            editingKey = key;
+          });
+        });
+      }
+
+      // Load data realtime dari Firebase
+      onValue(jadwalRef, snapshot => {
+        allData = [];
+        snapshot.forEach(child => {
+          allData.push({ key: child.key, ...child.val() });
+        });
+        renderTable(allData);
+      });
+
+      // Search filter berdasarkan tempat dan kegiatan
+      searchInput.addEventListener("input", () => {
+        const keyword = searchInput.value.toLowerCase();
+        const filtered = allData.filter(data =>
+          data.tempat.toLowerCase().includes(keyword) ||
+          data.kegiatan.toLowerCase().includes(keyword)
+        );
+        renderTable(filtered);
+      });
+
+      // Submit form (tambah/update)
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        const tempat = tempatInput.value.trim();
+        const tanggal = tanggalInput.value;
+        const waktu = waktuInput.value;
+        const kegiatan = kegiatanInput.value.trim();
+
+        if (!tempat || !tanggal || !waktu || !kegiatan) return;
+
+        if (editingKey) {
+          update(ref(db, `jadwal/${editingKey}`), { tempat, tanggal, waktu, kegiatan }).then(() => {
+            editingKey = null;
+            form.reset();
+          });
+        } else {
+          const newRef = push(jadwalRef);
+          set(newRef, { tempat, tanggal, waktu, kegiatan }).then(() => {
+            form.reset();
+          });
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Dashboard</h2>
+    <ul>
+      <li data-target="users.html">Input Users</li>
+      <li data-target="admin.html">Input Admin</li>
+      <li data-target="rekammedis.html">Rekam Medis</li>
+      <li data-target="jadwal.html">Input Jadwal</li>
+      <li data-target="statistik.html">Statistik</li>
+      <li id="logoutBtn" style="cursor:pointer; color:#e74c3c; margin-top: 20px;">Logout</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <h2>Form Input Jadwal</h2>
+      <form id="jadwalForm">
+        <input type="text" id="tempat" placeholder="Tempat" required />
+        <input type="date" id="tanggal" required />
+        <input type="time" id="waktu" required />
+        <input type="text" id="kegiatan" placeholder="Kegiatan" required />
+        <button type="submit">Simpan</button>
+      </form>
+    </div>
+
+    <div class="list-container">
+      <div class="header-flex">
+        <h2>Daftar Jadwal</h2>
+        <input type="search" id="searchInput" placeholder="Cari tempat atau kegiatan..." />
+      </div>
+      <table id="jadwalTable" aria-label="Daftar jadwal">
+        <thead>
+          <tr>
+            <th>Tempat</th>
+            <th>Tanggal</th>
+            <th>Waktu</th>
+            <th>Kegiatan</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data jadwal muncul di sini -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard User Management</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f1f3f8;
+      display: flex;
+      min-height: 100vh;
+      overflow: hidden; /* halaman utama tidak scroll */
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #2c3e50;
+      color: white;
+      padding: 20px;
+    }
+    .sidebar h2 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      user-select: none;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar ul li {
+      padding: 10px 0;
+      border-bottom: 1px solid #3f556e;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sidebar ul li:hover {
+      background-color: #34495e;
+    }
+
+    /* Main content */
+    .main {
+      padding: 30px;
+      display: block;          /* block supaya normal */
+      height: 100vh;           /* supaya tinggi penuh viewport */
+      overflow-y: auto;        /* scroll vertical jika konten overflow */
+      flex-grow: unset;
+    }
+
+
+    /* Card style */
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      /* remove max-width for form so it can stretch */
+    }
+    select {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background-color: white;
+      font-size: 14px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 20px;
+      padding-right: 35px;
+    }
+    select:focus {
+      border-color: #007BFF;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+
+    /* Headings */
+    h2 {
+      margin-top: 0;
+      color: #333;
+      user-select: none;
+    }
+
+    /* Form */
+    /* Form */
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    input {
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 100%;
+    }
+    button {
+      padding: 12px;
+      font-size: 16px;
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button:hover {
+      background-color: #2471a3;
+    }
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh; /* pakai viewport height supaya full layar */
+  padding: 40px 20px; /* beri ruang supaya modal tidak nempel atas bawah */
+  background: rgba(200, 220, 230, 0.4);
+  backdrop-filter: blur(5px);
+  overflow-y: auto; /* aktifkan scroll jika isi lebih tinggi */
+}
+
+.modal-content {
+  background: #f9faff;
+  margin: auto;
+  padding: 25px 30px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 6px 20px rgba(100, 120, 140, 0.15);
+  color: #3b4a6b;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  border: 1.5px solid #aac9e5;
+
+  position: relative;  /* **TAMBAHKAN INI** */
+  box-sizing: border-box; /* opsional tapi bagus */
+}
+
+
+
+
+
+
+.close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #7a8ba6; /* abu kebiruan kalem */
+  transition: color 0.3s ease, transform 0.3s ease;
+  user-select: none;
+}
+
+.close:hover {
+  color: #4a5d7b; /* sedikit lebih gelap */
+  transform: scale(1.15);
+}
+
+/* Jika ingin form di modal tetap pakai styling form di atas, ga perlu tambahan lagi */
+
+ .list-container {
+  background-color: #f9fafb;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  max-width: 1200px;
+  margin: 20px auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+
+.list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list-container::-webkit-scrollbar-thumb {
+  background-color: #a0aec0;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+  user-select: none;
+}
+
+.header-flex h2 {
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2vw, 1.9rem);  /* font-size responsif */
+  color: #2c3e50;
+  margin: 0;
+  flex-grow: 1;
+  min-width: 200px;            /* beri ruang minimum lebih besar */
+  user-select: none;
+  line-height: 1.2;
+}
+    #searchInput {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      max-width: 300px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+   .table-wrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+}
+
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      flex-grow: 1;
+    }
+    thead th {
+      background-color: #f0f0f0;
+      padding: 12px;
+      border: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-weight: 600;
+      color: #444;
+      white-space: nowrap;
+      text-align: center;
+      user-select: none;
+    }
+    tbody td {
+      border: 1px solid #ddd;
+      padding: 12px 10px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Set width kolom */
+    th:nth-child(1), td:nth-child(1) { width: 4%; text-align: center; } /* No */
+    th:nth-child(2), td:nth-child(2) { width: 10%; text-align: left; padding-left: 12px; } /* Nama */
+    th:nth-child(3), td:nth-child(3) { width: 10%; text-align: left; padding-left: 12px; } /* Email */
+    th:nth-child(4), td:nth-child(4) { width:10%; text-align: center; } /* Password */
+    th:nth-child(5), td:nth-child(5) { width:10%; text-align: center; } /* Telepon */
+    th:nth-child(6), td:nth-child(6) { width: 10%; text-align: center; } /* NIK */
+    th:nth-child(7), td:nth-child(7) { width: 10%; text-align: center; } /* BPJS */
+    th:nth-child(8), td:nth-child(8) { width: 13%; text-align: center; } /* Tanggal Lahir */
+    th:nth-child(9), td:nth-child(9) { width: 5%; text-align: center; } /* Usia */
+    th:nth-child(10), td:nth-child(10) { width: 4%; text-align: center; } /* JK */
+    th:nth-child(11), td:nth-child(11) { width: 10%; text-align: left; padding-left: 12px; } /* Alamat */
+    th:nth-child(12), td:nth-child(12) { width: 15%; text-align: center; } /* Aksi */
+
+
+    /* Tombol aksi */
+    button.editBtn,
+    button.deleteBtn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.25s ease;
+      margin: 0 4px;
+      color: white;
+      user-select: none;
+    }
+    button.editBtn {
+      background-color: #3498db;
+    }
+    button.editBtn:hover {
+      background-color: #2980b9;
+    }
+    button.deleteBtn {
+      background-color: #e74c3c;
+    }
+    button.deleteBtn:hover {
+      background-color: #c0392b;
+    }
+
+    /* Hover baris */
+    tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    /* Responsif */
+    @media (max-width: 768px) {
+      .list-container {
+        max-height: 280px;
+      }
+      .header-flex {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+      }
+      #searchInput {
+        max-width: 100%;
+      }
+      /* Ubah tabel jadi block untuk mobile */
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        display: none; /* sembunyikan header */
+      }
+      tbody tr {
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      tbody td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        white-space: normal;
+        overflow: visible;
+      }
+      tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 12px;
+        width: 45%;
+        padding-left: 12px;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+      }
+    }
+  </style>
+
+  <!-- Firebase SDK + JS -->
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    push,
+    set,
+    onValue,
+    remove,
+    update
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBBAYrLjPDZDH1YrbRPV2_-cAIPXKuwFFM",
+    authDomain: "posyanduapp-61635.firebaseapp.com",
+    databaseURL: "https://posyanduapp-61635-default-rtdb.firebaseio.com",
+    projectId: "posyanduapp-61635",
+    storageBucket: "posyanduapp-61635.appspot.com",
+    messagingSenderId: "665390164212",
+    appId: "1:665390164212:web:8c75ce018b1128b356d6a1",
+    measurementId: "G-8LJRMFNG0Z"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Navigasi sidebar
+  document.querySelectorAll('.sidebar ul li').forEach(item => {
+    item.addEventListener('click', () => {
+      const targetPage = item.getAttribute('data-target');
+      if (targetPage) window.location.href = targetPage;
+    });
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  window.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("userForm");
+    const tableBody = document.getElementById("userTable").querySelector("tbody");
+    const searchInput = document.getElementById("searchInput");
+
+    const namaInput = document.getElementById("nama");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const teleponInput = document.getElementById("telepon");
+    const nikInput = document.getElementById("nik");
+    const bpjsInput = document.getElementById("bpjs");
+    const tanggalLahirInput = document.getElementById("tanggalLahir");
+    const usiaInput = document.getElementById("usia");
+    const jkInput = document.getElementById("jk");
+    const alamatInput = document.getElementById("alamat");
+
+    const openUserModalBtn = document.getElementById('openUserModalBtn');
+    const userModal = document.getElementById('userModal');
+    const closeUserModal = document.getElementById('closeUserModal');
+
+    let editingKey = null;
+    const usersRef = ref(db, "users");
+    let allData = [];
+
+    teleponInput.addEventListener("input", () => {
+      if (teleponInput.value.length > 12) {
+        teleponInput.value = teleponInput.value.slice(0, 12);
+      }
+    });
+    // Batasi input NIK dan BPJS saat diketik
+    nikInput.addEventListener("input", () => {
+      if (nikInput.value.length > 16) {
+        nikInput.value = nikInput.value.slice(0, 16);
+      }
+    });
+
+    bpjsInput.addEventListener("input", () => {
+      if (bpjsInput.value.length > 13) {
+        bpjsInput.value = bpjsInput.value.slice(0, 13);
+      }
+    });
+  tanggalLahirInput.addEventListener("change", () => {
+    const tglLahir = new Date(tanggalLahirInput.value);
+    const today = new Date();
+
+    let usia = today.getFullYear() - tglLahir.getFullYear();
+    const m = today.getMonth() - tglLahir.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < tglLahir.getDate())) {
+      usia--;
+    }
+
+    usiaInput.value = isNaN(usia) ? "" : usia;
+  });
+    // Fungsi render tabel
+    function renderTable(filteredData) {
+      tableBody.innerHTML = "";
+      let count = 1;
+      filteredData.forEach((data) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td data-label="No">${count++}</td>
+          <td data-label="Nama">${data.nama}</td>
+          <td data-label="Email">${data.email}</td>
+          <td data-label="Password">${data.password}</td>
+          <td data-label="Telepon">${data.telepon || ""}</td>
+          <td data-label="NIK">${data.nik || ""}</td>
+          <td data-label="BPJS">${data.bpjs || ""}</td>
+          <td data-label="Tanggal Lahir">${data.tanggalLahir || ""}</td>
+          <td data-label="Usia">${data.usia || ""}</td>
+          <td data-label="JK">${data.jk || ""}</td>
+          <td data-label="Alamat">${data.alamat || ""}</td>
+          <td data-label="Aksi">
+            <button data-id="${data.key}" class="editBtn">Edit</button>
+            <button data-id="${data.key}" class="deleteBtn">Hapus</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Event tombol hapus
+      tableBody.querySelectorAll(".deleteBtn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const key = e.target.dataset.id;
+          if (confirm("Yakin ingin menghapus data ini?")) {
+            remove(ref(db, `users/${key}`));
+            if (editingKey === key) {
+              editingKey = null;
+              form.reset();
+              userModal.style.display = 'none';
+            }
+          }
+        });
+      });
+
+      // Event tombol edit
+      tableBody.querySelectorAll(".editBtn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const key = e.target.dataset.id;
+          const data = allData.find((d) => d.key === key);
+          if (!data) return;
+
+          namaInput.value = data.nama;
+          emailInput.value = data.email;
+          passwordInput.value = data.password;
+          teleponInput.value = data.telepon || "";
+          nikInput.value = data.nik || "";
+          bpjsInput.value = data.bpjs || "";
+          tanggalLahirInput.value = data.tanggalLahir || "";
+          usiaInput.value = data.usia || "";
+          jkInput.value = data.jk || "";
+          alamatInput.value = data.alamat || "";
+
+          editingKey = key;
+          userModal.style.display = 'flex';
+        });
+      });
+    }
+
+    // Ambil data realtime dan render
+    onValue(usersRef, (snapshot) => {
+      allData = [];
+      snapshot.forEach((child) => {
+        allData.push({ key: child.key, ...child.val() });
+      });
+      renderTable(allData);
+    });
+
+    // Filter pencarian nama (partial, case insensitive)
+    searchInput.addEventListener("input", () => {
+      const keyword = searchInput.value.trim().toLowerCase();
+      if (keyword === "") {
+        renderTable(allData);
+        return;
+      }
+      const filtered = allData.filter((data) =>
+        data.nama.toLowerCase().includes(keyword)
+      );
+      renderTable(filtered);
+    });
+
+    // Buka modal tambah user
+    openUserModalBtn.addEventListener('click', () => {
+      form.reset();
+      editingKey = null;
+      userModal.style.display = 'flex';
+    });
+
+    // Tutup modal dengan tombol ×
+    closeUserModal.addEventListener('click', () => {
+      form.reset();
+      editingKey = null;
+      userModal.style.display = 'none';
+    });
+
+    // Tutup modal klik di luar konten modal
+    window.addEventListener('click', (e) => {
+      if (e.target === userModal) {
+        form.reset();
+        editingKey = null;
+        userModal.style.display = 'none';
+      }
+    });
+
+    // Submit form tambah/edit
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const nama = namaInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      const telepon = teleponInput.value.trim();
+      const nik = nikInput.value.trim();
+      const bpjs = bpjsInput.value.trim();
+      const tanggalLahir = tanggalLahirInput.value;
+      const usia = usiaInput.value.trim();
+      const jk = jkInput.value;
+      const alamat = alamatInput.value.trim();
+
+      if (!nama || !email || !password || !telepon|| !nik|| !bpjs|| !tanggalLahir|| !jk|| !alamat) {
+        alert("Lenggkapi form!");
+        return;
+      }
+
+      if (nik && nik.length !== 16) {
+        alert("NIK harus 16 digit!");
+        return;
+      }
+
+      if (bpjs && bpjs.length !== 13) {
+        alert("No. BPJS harus 13 digit!");
+        return;
+      }
+
+      const emailExists = allData.some(
+        (user) => user.email.toLowerCase() === email.toLowerCase() && user.key !== editingKey
+      );
+
+      if (emailExists) {
+        alert("Email sudah digunakan, silakan gunakan email lain.");
+        return;
+      }
+
+      const userData = { nama, email, password, password, nik, bpjs, tanggalLahir, usia, jk, alamat };
+
+      if (editingKey) {
+        update(ref(db, `users/${editingKey}`), userData).then(() => {
+          alert("Data berhasil diubah");
+          editingKey = null;
+          form.reset();
+          userModal.style.display = 'none';
+        }).catch(err => alert("Gagal update data: " + err.message));
+      } else {
+        const userRef = push(usersRef);
+        set(userRef, userData).then(() => {
+          alert("Data berhasil ditambahkan");
+          form.reset();
+          userModal.style.display = 'none';
+        }).catch(err => alert("Gagal tambah data: " + err.message));
+      }
+    });
+   document.getElementById("printBtn").addEventListener("click", () => {
+  // Clone tabel asli supaya tidak merubah tampilan utama
+  const table = document.getElementById("userTable").cloneNode(true);
+
+  // Ambil header text semua kolom dalam huruf kecil untuk pencarian indeks
+  const headers = Array.from(table.rows[0].cells).map(th => th.innerText.toLowerCase().trim());
+
+  // Cari index kolom yang ingin dihapus saat print
+  const indexEmail = headers.indexOf("email");
+  const indexPassword = headers.indexOf("password");
+  const indexAksi = headers.indexOf("aksi");
+  const indexJK = headers.indexOf("jk");
+
+  // Kolom yang akan dihapus (dari kanan ke kiri agar indeks tetap valid)
+  const indicesToDelete = [indexEmail, indexPassword, indexAksi]
+    .filter(i => i !== -1)
+    .sort((a, b) => b - a);
+
+  // Hapus kolom yang tidak perlu di semua baris
+  for (const row of table.rows) {
+    for (const colIndex of indicesToDelete) {
+      if (row.cells[colIndex]) {
+        row.deleteCell(colIndex);
+      }
+    }
+  }
+
+  // Hitung jumlah Laki-laki dan Perempuan berdasarkan kolom JK yang sudah disesuaikan indeksnya
+  let countLaki = 0;
+  let countPerempuan = 0;
+
+  // Sesuaikan indexJK setelah kolom-kolom dihapus
+  let adjustedIndexJK = indexJK;
+  for (const deletedIndex of indicesToDelete) {
+    if (deletedIndex < indexJK) {
+      adjustedIndexJK--;
+    }
+  }
+
+  for (let i = 1; i < table.rows.length; i++) { // mulai dari 1 (skip header)
+    const row = table.rows[i];
+    const jkCell = row.cells[adjustedIndexJK];
+    if (jkCell) {
+      const jk = jkCell.innerText.trim().toLowerCase();
+      if (jk === "l" || jk === "laki-laki") countLaki++;
+      else if (jk === "p" || jk === "perempuan") countPerempuan++;
+    }
+  }
+
+  const totalUser = table.rows.length - 1; // total baris kecuali header
+
+  // Format tanggal cetak ke bahasa Indonesia
+  const now = new Date();
+  const tanggalCetak = now.toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  // Hitung total kolom yang tersisa (untuk colspan footer)
+  const totalCols = table.rows[0].cells.length;
+  const footerColspan = totalCols - 1; // karena kolom terakhir untuk angka
+
+  // Buat atau update tfoot untuk summary jumlah user
+  let tfoot = table.querySelector('tfoot');
+  if (!tfoot) {
+    tfoot = document.createElement('tfoot');
+    table.appendChild(tfoot);
+  }
+  tfoot.innerHTML = `
+    <tr style="background:#eee; font-weight:bold;">
+      <td colspan="${footerColspan}">Jumlah Laki-laki</td><td>${countLaki}</td>
+    </tr>
+    <tr style="background:#eee; font-weight:bold;">
+      <td colspan="${footerColspan}">Jumlah Perempuan</td><td>${countPerempuan}</td>
+    </tr>
+    <tr style="background:#eee; font-weight:bold;">
+      <td colspan="${footerColspan}">Total Pengguna</td><td>${totalUser}</td>
+    </tr>
+  `;
+
+  // HTML lengkap untuk halaman cetak dengan style inline
+  const htmlContent = `
+    <html>
+      <head>
+        <title>Cetak Data User Posyandu</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 30mm 20mm 25mm 20mm;
+          }
+          body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7fb;
+          }
+          .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #1f497d;
+            padding-bottom: 12px;
+          }
+          .title-group {
+            flex-grow: 1;
+          }
+          .title-group h1 {
+            font-size: 26px;
+            margin: 0;
+            font-weight: 700;
+            color: #1f497d;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+          }
+          .title-group p {
+            margin: 6px 0 0 0;
+            font-size: 15px;
+            color: #3a5f9e;
+            font-style: italic;
+          }
+          .tanggal-cetak {
+            text-align: right;
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #5a739c;
+            font-weight: 600;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          }
+          table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 14px;
+            margin-bottom: 50px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(31, 73, 125, 0.15);
+            overflow: hidden;
+          }
+          th, td {
+            padding: 14px 18px;
+            text-align: left;
+            vertical-align: middle;
+            color: #2c3e50;
+            border-bottom: 1px solid #d9e3f0;
+          }
+          th {
+            background: linear-gradient(90deg, #3a65a9, #1f497d);
+            color: #fff;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            user-select: none;
+            border-bottom: 3px solid #173c6e;
+          }
+          tbody tr:nth-child(even) {
+            background-color: #f0f4fc;
+            transition: background-color 0.3s ease;
+          }
+          tbody tr:hover {
+            background-color: #d0dff7;
+            cursor: default;
+            transition: background-color 0.3s ease;
+          }
+          .footer-ttd {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 14px;
+            margin-top: 50px;
+            color: #1f497d;
+            font-weight: 700;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          }
+          .ttd-box {
+            text-align: center;
+            width: 260px;
+            margin-left: 20px;
+          }
+          .ttd-space {
+            height: 90px;
+            border-bottom: 2px solid #a4b3d6;
+            margin-bottom: 15px;
+          }
+          @media print {
+            button#printBtn {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title-group">
+            <h1>Data Akun Pengguna Aplikasi Posyandu</h1>
+            <p></p>
+          </div>
+        </div>
+        <div class="tanggal-cetak">Dicetak pada: ${tanggalCetak}</div>
+        ${table.outerHTML}
+        <div class="footer-ttd">
+          <div class="ttd-box">
+            <div>Ketua Posyandu</div>
+            <div class="ttd-space"></div>
+            <div>hasdiara</div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  // Buka jendela baru, tulis dokumen, dan cetak
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+});
+
+
+  });
+</script>
+
+
+
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>Dashboard</h2>
+    <ul>
+      <li data-target="users.html">Input Users</li>
+      <li data-target="admin.html">Input Admin</li>
+      <li data-target="rekammedis.html">Rekam Medis</li>
+      <li data-target="jadwal.html">Input Jadwal</li>
+      <li data-target="statistik.html">Statistik</li>
+      <li id="logoutBtn" style="cursor:pointer; color:#e74c3c; margin-top: 20px;">Logout</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="list-container">
+      <div class="header-flex">
+        <h2>Daftar Akun User</h2>
+        <input type="search" id="searchInput" placeholder="Cari berdasarkan nama..." />
+        <button id="printBtn">🖨️ Print</button>
+        <button id="openUserModalBtn" style="margin-left: 10px;">+</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="userTable" aria-label="Daftar akun user">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama</th>
+              <th>Email</th>
+              <th>Password</th>
+              <th>Telepon</th>
+              <th>NIK</th>
+              <th>NO.Bpjs</th>
+              <th>Tanggal Lahir</th>
+              <th>Usia</th>
+              <th>JK</th>
+              <th>Alamat</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data muncul di sini -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal Form Input User -->
+    <div id="userModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeUserModal">&times;</span>
+        <h2>Form Input Akun User</h2>
+        <form id="userForm">
+          <label for="nama">Nama Lengkap</label>
+          <input type="text" id="nama" placeholder="Nama Lengkap" required />
+
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="Email" required />
+
+          <label for="password">Password</label>
+          <input type="text" id="password" placeholder="Password" required />
+
+          <label for="telepon">Telepon</label>
+          <input type="text" id="telepon" placeholder="Telepon" maxlength="12" />
+
+          <label for="nik">NIK</label>
+          <input type="text" id="nik" placeholder="NIK" maxlength="16" />
+
+          <label for="bpjs">No. BPJS</label>
+          <input type="text" id="bpjs" placeholder="No. BPJS" maxlength="13" />
+
+          <label for="tanggalLahir">Tanggal Lahir</label>
+          <input type="date" id="tanggalLahir" />
+
+          <label for="usia">Usia</label>
+          <input type="number" id="usia" placeholder="Usia" />
+
+          <label for="jk">Jenis Kelamin</label>
+          <select id="jk">
+            <option value="">Pilih Jenis Kelamin</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+
+          <label for="alamat">Alamat</label>
+          <input type="text" id="alamat" placeholder="Alamat" />
+
+          <button type="submit">Simpan</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
